@@ -39,6 +39,7 @@
      [topbar/topbar
       {:modal?        true
        :border-bottom false
+       :navigation    :none
        :right-accessories
        [{:label    (i18n/label :t/close-all)
          :on-press #(do (re-frame/dispatch [:browser.ui/clear-all-browsers-pressed])
