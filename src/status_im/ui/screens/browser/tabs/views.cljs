@@ -52,7 +52,6 @@
                                        {:style {:height     64
                                                 :align-self :stretch}}]
                       :key-fn         :browser-id
-                      :end-fill-color colors/gray-lighter
                       :render-fn      list-item}]
 
      [components.plus-button/plus-button
