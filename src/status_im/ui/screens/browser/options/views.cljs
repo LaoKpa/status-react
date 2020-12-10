@@ -50,7 +50,7 @@
             :title               (i18n/label :t/new-tab)
             :accessibility-label :new-tab
             :icon                :main-icons/add
-            :on-press            #(hide-sheet-and-dispatch [:navigate-to :empty-tab])}]
+            :on-press            #(hide-sheet-and-dispatch [:browser.ui/open-empty-tab])}]
           [quo/list-item
            {:theme               :accent
             :title               (if fav? (i18n/label :t/remove-favourite) (i18n/label :t/favourite))

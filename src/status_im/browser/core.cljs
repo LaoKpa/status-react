@@ -24,7 +24,8 @@
             [status-im.multiaccounts.update.core :as multiaccounts.update]
             [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
             [status-im.browser.webview-ref :as webview-ref]
-            ["eth-phishing-detect" :as eth-phishing-detect]))
+            ["eth-phishing-detect" :as eth-phishing-detect]
+            [status-im.utils.debounce :as debounce]))
 
 (fx/defn update-browser-option
   [{:keys [db]} option-key option-value]
@@ -250,7 +251,7 @@
   (let [browser (get-current-browser (:db cofx))
         options (get-in cofx [:db :browser/options])
         current-url (:url options)]
-    (when (and (not= "about:blank" url) (not= current-url url) (not= (str current-url "/") url))
+    (when (and (not (string/blank? url)) (not= "about:blank" url) (not= current-url url) (not= (str current-url "/") url))
       (let [resolved-ens (first (filter (fn [v]
                                           (not= (.indexOf ^js url (second v)) -1))
                                         (:resolved-ens options)))
@@ -509,3 +510,9 @@
             #(when (= (:view-id db) :browser)
                (merge (navigation/navigate-back %)
                       {:dispatch [:browser.ui/browser-item-selected (get-in db [:browser/options :browser-id])]}))))
+
+(fx/defn open-empty-tab
+  {:events [:browser.ui/open-empty-tab]}
+  [cofx]
+  (debounce/clear :browser/navigation-state-changed)
+  (navigation/navigate-to-cofx cofx :empty-tab nil))

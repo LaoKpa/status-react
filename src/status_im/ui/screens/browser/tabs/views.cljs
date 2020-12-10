@@ -16,7 +16,7 @@
    [react/view {:flex 1}
     [quo/list-item
      {:on-press #(if empty-tab
-                   (re-frame/dispatch [:navigate-to :empty-tab])
+                   (re-frame/dispatch [:browser.ui/open-empty-tab])
                    (re-frame/dispatch [:browser.ui/browser-item-selected browser-id]))
       :title    name
       :subtitle (when-not empty-tab (or url (i18n/label :t/dapp)))
@@ -42,7 +42,7 @@
        :right-accessories
        [{:label    (i18n/label :t/close-all)
          :on-press #(do (re-frame/dispatch [:browser.ui/clear-all-browsers-pressed])
-                        (re-frame/dispatch [:navigate-to :empty-tab]))}]
+                        (re-frame/dispatch [:browser.ui/open-empty-tab]))}]
        :title         (i18n/label :t/tabs)}]
      [components/separator-dark]
      [list/flat-list {:data           (conj browsers {:empty-tab  true
@@ -56,4 +56,4 @@
                       :render-fn      list-item}]
 
      [components.plus-button/plus-button
-      {:on-press #(re-frame/dispatch [:navigate-to :empty-tab])}]]))
+      {:on-press #(re-frame/dispatch [:browser.ui/open-empty-tab])}]]))

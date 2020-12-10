@@ -69,7 +69,7 @@
                                                          (re-frame/dispatch [:browser.ui/previous-page-button-pressed])
                                                          (do
                                                            (re-frame/dispatch [:browser.ui/remove-browser-pressed browser-id])
-                                                           (re-frame/dispatch [:navigate-to :empty-tab])))
+                                                           (re-frame/dispatch [:browser.ui/open-empty-tab])))
                                  :disabled            empty-tab
                                  :style               (when empty-tab styles/disabled-button)
                                  :accessibility-label :previous-page-button}
