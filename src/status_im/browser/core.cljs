@@ -115,9 +115,9 @@
                                        :cb       resolve-ens-contenthash-callback}}))
 
 (fx/defn update-browser
-  [{:keys [db now]}
+  [{:keys [db]}
    {:keys [browser-id] :as browser}]
-  (let [updated-browser (-> (assoc browser :timestamp now)
+  (let [updated-browser (-> browser
                             (update-dapp-name)
                             (check-if-phishing-url))]
     {:db            (update-in db

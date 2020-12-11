@@ -35,7 +35,7 @@
        :icon                :main-icons/cancel
        :on-press            #(hide-sheet-and-dispatch [:browser/revoke-dapp-permissions host])}]]))
 
-(defn browser-options [url account empty-tab]
+(defn browser-options [url account empty-tab name]
   (fn []
     (let [topic (http/topic-from-url url)
           bookmarks @(re-frame/subscribe [:bookmarks])
@@ -53,12 +53,12 @@
             :on-press            #(hide-sheet-and-dispatch [:browser.ui/open-empty-tab])}]
           [quo/list-item
            {:theme               :accent
-            :title               (if fav? (i18n/label :t/remove-favourite) (i18n/label :t/favourite))
+            :title               (if fav? (i18n/label :t/remove-favourite) (i18n/label :t/add-favourite))
             :accessibility-label :add-remove-fav
             :icon                (if fav? :main-icons/delete :main-icons/favourite)
             :on-press            #(hide-sheet-and-dispatch (if fav?
                                                              [:browser/delete-bookmark url]
-                                                             [:navigate-to :new-bookmark {:url url}]))}]
+                                                             [:navigate-to :new-bookmark {:url url :name name :new true}]))}]
           [quo/list-item
            {:theme               :accent
             :title               (i18n/label :t/share)

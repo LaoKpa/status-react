@@ -26,7 +26,7 @@
             [status-im.ui.screens.browser.options.views :as options])
   (:require-macros [status-im.utils.views :as views]))
 
-(defn toolbar-content [url url-original {:keys [secure?]} url-editing? unsafe?]
+(defn toolbar-content [url url-original secure? url-editing? unsafe?]
   (let [url-text (atom url)]
     [react/view (styles/toolbar-content)
      [react/touchable-highlight {:on-press #(re-frame/dispatch [:browser.ui/lock-pressed secure?])}
@@ -62,7 +62,7 @@
     [react/text {:style styles/web-view-error-text}
      (str desc)]]))
 
-(views/defview navigation [url can-go-back? can-go-forward? dapps-account empty-tab browser-id]
+(views/defview navigation [{:keys [url can-go-back? can-go-forward? dapps-account empty-tab browser-id name]}]
   (views/letsubs [accounts [:accounts-without-watch-only]]
     [react/view (styles/navbar)
      [react/touchable-highlight {:on-press            #(if can-go-back?
@@ -99,7 +99,8 @@
                       {:content (options/browser-options
                                  url
                                  dapps-account
-                                 empty-tab)}]))
+                                 empty-tab
+                                 name)}]))
        :style               (when empty-tab styles/disabled-button)
        :accessibility-label :browser-options}
       [icons/icon :main-icons/more]]]))
@@ -160,9 +161,9 @@
 ;; should-component-update is called only when component's props are changed,
 ;; that's why it can't be used in `browser`, because `url` comes from subs
 (views/defview browser-component
-  [{:keys [error? url browser browser-id unsafe? can-go-back? ignore-unsafe
-           can-go-forward? resolving? network-id url-original
-           show-permission show-tooltip dapp? name dapps-account resources-permission?]}]
+  [{:keys [error? url browser-id unsafe? can-go-back? ignore-unsafe
+           can-go-forward? resolving? network-id url-original dapp? dapp
+           show-permission show-tooltip name dapps-account resources-permission?]}]
   {:should-component-update (fn [_ _ args]
                               (let [[_ props] args]
                                 (not (nil? (:url props)))))}
@@ -196,8 +197,13 @@
         :on-load                                    #(re-frame/dispatch [:browser/loading-started])
         :on-error                                   #(re-frame/dispatch [:browser/error-occured])
         :injected-java-script-before-content-loaded (js-res/ethereum-provider (str network-id))}])]
-   [navigation url-original can-go-back? can-go-forward? dapps-account false browser-id]
-   [permissions.views/permissions-panel [(:dapp? browser) (:dapp browser) dapps-account] show-permission]
+   [navigation {:url url-original
+                :name name
+                :can-go-back? can-go-back?
+                :can-go-forward? can-go-forward?
+                :dapps-account dapps-account
+                :browser-id browser-id}]
+   [permissions.views/permissions-panel [dapp? dapp dapps-account] show-permission]
    (when show-tooltip
      [tooltip/bottom-tooltip-info
       (if (= show-tooltip :secure)
@@ -207,7 +213,7 @@
 
 (views/defview browser []
   (views/letsubs [window-width [:dimensions/window-width]
-                  {:keys [browser-id dapp? name unsafe? ignore-unsafe] :as browser} [:get-current-browser]
+                  {:keys [browser-id dapp? dapp name unsafe? ignore-unsafe secure?] :as browser} [:get-current-browser]
                   {:keys [url error? loading? url-editing? show-tooltip show-permission resolving?]} [:browser/options]
                   dapps-account [:dapps-account]
                   network-id [:chain-id]
@@ -216,16 +222,16 @@
           can-go-forward? (browser/can-go-forward? browser)
           url-original    (browser/get-current-url browser)]
       [react/view {:style styles/browser}
-       [toolbar-content url url-original browser url-editing? unsafe?]
+       [toolbar-content url url-original secure? url-editing? unsafe?]
        [components/separator-dark]
        [react/view
         (when loading?
           [connectivity/loading-indicator window-width])]
        [browser-component {:dapp?                 dapp?
+                           :dapp                  dapp
                            :error?                error?
                            :url                   url
                            :url-original          url-original
-                           :browser               browser
                            :browser-id            browser-id
                            :unsafe?               unsafe?
                            :ignore-unsafe         ignore-unsafe

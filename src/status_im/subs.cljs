@@ -1034,7 +1034,7 @@
  :browser/browsers-vals
  :<- [:browser/browsers]
  (fn [browsers]
-   (sort-by :timestamp > (vals browsers))))
+   (vals browsers)))
 
 (re-frame/reg-sub
  :get-current-browser

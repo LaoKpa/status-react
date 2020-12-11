@@ -1339,6 +1339,7 @@
     "close-all": "Close all",
     "tabs": "Tabs",
     "new-tab": "New tab",
+    "empty-tab": "Empty tab",
     "open-in-new-tab": "Open in new tab",
     "has-permissions": "has permission to access",
     "connect-wallet": "Connect wallet",

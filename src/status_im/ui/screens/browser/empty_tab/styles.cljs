@@ -2,10 +2,12 @@
   (:require [status-im.ui.components.colors :as colors]))
 
 (def input
-  {:margin-horizontal  16
-   :margin-vertical    10
-   :height             36
-   :padding            0})
+  {:height  36
+   :padding 0})
+
+(def input-container-style
+  {:margin-horizontal 16
+   :margin-vertical   10})
 
 (defn browser-icon-container []
   {:width            40

@@ -11,43 +11,61 @@
             [status-im.ui.screens.browser.accounts :as accounts]
             [status-im.ui.screens.browser.empty-tab.styles :as styles]
             [status-im.ui.screens.wallet.components.views :as components]
-            [status-im.ui.screens.browser.views :as browser])
+            [status-im.ui.screens.browser.views :as browser]
+            [status-im.utils.http :as http]
+            [reagent.core :as reagent])
   (:require-macros [status-im.utils.views :as views]))
 
 (defn hide-sheet-and-dispatch [event]
   (re-frame/dispatch [:bottom-sheet/hide])
   (js/setTimeout #(re-frame/dispatch event) 200))
 
-(defn list-item [{:keys [name url] :as bookmark}]
-  [quo/list-item
-   {:on-press      #(re-frame/dispatch [:browser.ui/open-url url])
-    :on-long-press (fn []
-                     (re-frame/dispatch
-                      [:bottom-sheet/show-sheet
-                       {:content (fn []
-                                   [react/view {:flex 1}
-                                    [quo/list-item
-                                     {:theme               :accent
-                                      :title               (i18n/label :t/open-in-new-tab)
-                                      :accessibility-label :remove-dapp-from-list
-                                      :icon                :main-icons/tabs
-                                      :on-press            #(hide-sheet-and-dispatch [:browser.ui/open-url url])}]
-                                    [quo/list-item
-                                     {:theme               :accent
-                                      :title               (i18n/label :t/edit)
-                                      :accessibility-label :remove-dapp-from-list
-                                      :icon                :main-icons/edit
-                                      :on-press            #(hide-sheet-and-dispatch [:navigate-to :new-bookmark bookmark])}]
-                                    [quo/list-item
-                                     {:theme               :negative
-                                      :title               (i18n/label :t/delete)
-                                      :accessibility-label :clear-all-dapps
-                                      :icon                :main-icons/delete
-                                      :on-press            #(hide-sheet-and-dispatch [:browser/delete-bookmark url])}]])}]))
-    :title         name
-    :subtitle      (or url (i18n/label :t/dapp))
-    :icon          [react/view (styles/browser-icon-container)
-                    [icons/icon :main-icons/browser {:color colors/gray}]]}])
+(defn list-item [_]
+  (let [loaded (reagent/atom nil)]
+    (fn [{:keys [name url] :as bookmark}]
+      [quo/list-item
+       {:on-press      #(re-frame/dispatch [:browser.ui/open-url url])
+        :on-long-press (fn []
+                         (re-frame/dispatch
+                          [:bottom-sheet/show-sheet
+                           {:content (fn []
+                                       [react/view {:flex 1}
+                                        [quo/list-item
+                                         {:theme               :accent
+                                          :title               (i18n/label :t/open-in-new-tab)
+                                          :accessibility-label :remove-dapp-from-list
+                                          :icon                :main-icons/tabs
+                                          :on-press            #(hide-sheet-and-dispatch [:browser.ui/open-url url])}]
+                                        [quo/list-item
+                                         {:theme               :accent
+                                          :title               (i18n/label :t/edit)
+                                          :accessibility-label :remove-dapp-from-list
+                                          :icon                :main-icons/edit
+                                          :on-press            #(hide-sheet-and-dispatch [:navigate-to :new-bookmark bookmark])}]
+                                        [quo/list-item
+                                         {:theme               :negative
+                                          :title               (i18n/label :t/delete)
+                                          :accessibility-label :clear-all-dapps
+                                          :icon                :main-icons/delete
+                                          :on-press            #(hide-sheet-and-dispatch [:browser/delete-bookmark url])}]])}]))
+        :title         name
+        :subtitle      (or url (i18n/label :t/dapp))
+        :icon          [react/view {:width           40
+                                    :height          40
+                                    :align-items     :center
+                                    :justify-content :center}
+                        (when (or (nil? @loaded) @loaded)
+                          [react/image {:onLoad #(reset! loaded true)
+                                        :style  {:width 32 :height 32 :position :absolute :top 4 :left 4}
+                                        :source {:uri (str "https://" (http/url-host url) "/favicon.ico")}}])
+                        (when-not @loaded
+                          [react/view {:width            40
+                                       :height           40
+                                       :border-radius    20
+                                       :background-color colors/gray-lighter
+                                       :align-items      :center
+                                       :justify-content  :center}
+                           [icons/icon :main-icons/browser {:color colors/gray}]])]}])))
 
 (def dapp-image-data {:image (resources/get-image :dapp-store) :width 768 :height 333})
 (defn dapp-image [] [components.common/image-contain nil dapp-image-data])
@@ -99,8 +117,8 @@
                         :placeholder         (i18n/label :t/enter-url)
                         :auto-capitalize     :none
                         :auto-correct        false
-                        :show-cancel         false
                         :style               styles/input
+                        :container-style     styles/input-container-style
                         :accessibility-label :dapp-url-input
                         :return-key-type     :go}]
        [components/separator-dark]
@@ -116,4 +134,6 @@
                                           [react/text {:style {:color colors/gray :margin-top 4}}
                                            (i18n/label :t/favourite-description)]]
                         :render-fn       list-item}]
-       [browser/navigation nil false false dapps-account true nil]])))
+       [browser/navigation
+        {:dapps-account dapps-account
+         :empty-tab     true}]])))

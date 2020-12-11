@@ -12,9 +12,9 @@
             [re-frame.core :as re-frame]))
 
 (views/defview new-bookmark []
-  (views/letsubs [{:keys [url name]} [:get-screen-params]
+  (views/letsubs [{:keys [url name new]} [:get-screen-params]
                   input-name (reagent/atom name)]
-    (let [edit? (not (string/blank? name))]
+    (let [edit? (not new)]
       [kb-presentation/keyboard-avoiding-view {:style {:flex 1}}
        [react/view {:flex 1}
         [topbar/topbar

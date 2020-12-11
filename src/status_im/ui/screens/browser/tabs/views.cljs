@@ -9,29 +9,42 @@
             [quo.core :as quo]
             [status-im.ui.components.icons.vector-icons :as icons]
             [status-im.ui.screens.wallet.components.views :as components]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [status-im.utils.http :as http]
+            [reagent.core :as reagent]))
 
-(defn list-item [{:keys [browser-id name url empty-tab]}]
-  [react/view {:flex-direction :row :flex 1}
-   [react/view {:flex 1}
-    [quo/list-item
-     {:on-press #(if empty-tab
-                   (re-frame/dispatch [:browser.ui/open-empty-tab])
-                   (re-frame/dispatch [:browser.ui/browser-item-selected browser-id]))
-      :title    name
-      :subtitle (when-not empty-tab (or url (i18n/label :t/dapp)))
-      :icon     [react/view {:width            40
-                             :height           40
-                             :border-radius    20
-                             :background-color colors/gray-lighter
-                             :align-items      :center
-                             :justify-content  :center}
-                 [icons/icon :main-icons/browser {:color colors/gray}]]}]]
-   (when-not empty-tab
-     [react/touchable-highlight
-      {:style    {:width 60 :justify-content :center :align-items :center}
-       :on-press #(re-frame/dispatch [:browser.ui/remove-browser-pressed browser-id])}
-      [icons/icon :main-icons/close-circle]])])
+(defn list-item [_]
+  (let [loaded (reagent/atom nil)]
+    (fn [{:keys [browser-id name url empty-tab]}]
+      [react/view {:flex-direction :row :flex 1}
+       [react/view {:flex 1}
+        [quo/list-item
+         {:on-press #(if empty-tab
+                       (re-frame/dispatch [:browser.ui/open-empty-tab])
+                       (re-frame/dispatch [:browser.ui/browser-item-selected browser-id]))
+          :title    name
+          :subtitle (when-not empty-tab (or url (i18n/label :t/dapp)))
+          :icon     [react/view {:width            40
+                                 :height           40
+                                 :align-items      :center
+                                 :justify-content  :center}
+                     (when (or (nil? @loaded)  @loaded)
+                       [react/image {:onLoad #(reset! loaded true)
+                                     :style  {:width 32 :height 32 :position :absolute :top 4 :left 4}
+                                     :source {:uri (str "https://" (http/url-host url) "/favicon.ico")}}])
+                     (when-not @loaded
+                       [react/view {:width            40
+                                    :height           40
+                                    :border-radius    20
+                                    :background-color colors/gray-lighter
+                                    :align-items      :center
+                                    :justify-content  :center}
+                        [icons/icon :main-icons/browser {:color colors/gray}]])]}]]
+       (when-not empty-tab
+         [react/touchable-highlight
+          {:style    {:width 60 :justify-content :center :align-items :center}
+           :on-press #(re-frame/dispatch [:browser.ui/remove-browser-pressed browser-id])}
+          [icons/icon :main-icons/close-circle {:color colors/gray}]])])))
 
 (views/defview tabs []
   (views/letsubs [browsers [:browser/browsers-vals]]
@@ -41,19 +54,19 @@
        :border-bottom false
        :navigation    :none
        :right-accessories
-       [{:label    (i18n/label :t/close-all)
-         :on-press #(do (re-frame/dispatch [:browser.ui/clear-all-browsers-pressed])
-                        (re-frame/dispatch [:browser.ui/open-empty-tab]))}]
+                      [{:label    (i18n/label :t/close-all)
+                        :on-press #(do (re-frame/dispatch [:browser.ui/clear-all-browsers-pressed])
+                                       (re-frame/dispatch [:browser.ui/open-empty-tab]))}]
        :title         (i18n/label :t/tabs)}]
      [components/separator-dark]
-     [list/flat-list {:data           (conj browsers {:empty-tab  true
-                                                      :name       (i18n/label :t/new-tab)
-                                                      :url        ""})
-                      :footer         [react/view
-                                       {:style {:height     64
-                                                :align-self :stretch}}]
-                      :key-fn         :browser-id
-                      :render-fn      list-item}]
+     [list/flat-list {:data      (conj browsers {:empty-tab true
+                                                 :name      (i18n/label :t/empty-tab)
+                                                 :url       ""})
+                      :footer    [react/view
+                                  {:style {:height     64
+                                           :align-self :stretch}}]
+                      :key-fn    :browser-id
+                      :render-fn list-item}]
 
      [components.plus-button/plus-button
       {:on-press #(re-frame/dispatch [:browser.ui/open-empty-tab])}]]))
