@@ -1841,8 +1841,11 @@
 (re-frame/reg-sub
  :contacts/contact-by-address
  :<- [:contacts/contacts]
- (fn [contacts [_ address]]
-   (contact.db/find-contact-by-address contacts address)))
+ :<- [:multiaccount]
+ (fn [[contacts multiaccount] [_ address]]
+   (if (ethereum/address= address (:public-key multiaccount))
+     multiaccount
+     (contact.db/find-contact-by-address contacts address))))
 
 (re-frame/reg-sub
  :contacts/contacts-by-address
